@@ -18,13 +18,12 @@ for controlling _Xiaomi MiHome_ devices. Until now there was no way to
 initialize a newly purchased device without running the proprietary Android 
 app that demands extensive privileges and phones home to the manufacturer.
 
-The second goal is to demonstrate that security by obscurity is a problematic 
-approach, and to warn users of a fundamental security flaw.
-
 As of 2017-02-10, these devices **broadcast the user's WiFi credentials with 
 pseudo-encryption that can be easily cracked by any passive listener**.
 
 ## Contents
+
+[PROTOCOL.md](PROTOCOL.md)
 
 ### pcap-ng decryptor
 
