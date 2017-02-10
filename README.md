@@ -23,7 +23,7 @@ pseudo-encryption that can be easily cracked by any passive listener**.
 
 ## Contents
 
-[PROTOCOL.md](PROTOCOL.md)
+[doc/PROTOCOL.md](doc/PROTOCOL.md)
 
 ### pcap-ng decryptor
 
