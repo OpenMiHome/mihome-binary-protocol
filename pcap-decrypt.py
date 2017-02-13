@@ -21,6 +21,7 @@ import sys
 import argparse
 import json
 import pprint
+import ipaddress
 try:
     # https://github.com/KimiNewt/pyshark
     import pyshark
@@ -64,6 +65,8 @@ for packet in cap:
     mac_src, mac_dst = get_macs(packet)
     incoming = mac_src.startswith(XIAOMI_MAC)
     outgoing = not incoming
+    if not "data" in packet:
+        continue
     packet.data.raw_mode = True
     data = bytearray.fromhex(packet.data.data)
     mp = miio.MiioPacket()
@@ -76,7 +79,12 @@ for packet in cap:
     if args.print_headers:
         print("HEADER:")
         miio.print_head(data)
-        
+
+    if not ipaddress.ip_address(packet.ip.src).is_private \
+        or not ipaddress.ip_address(packet.ip.dst).is_private:
+        print("NOT IMPLEMENTED: packet to/from Xiaomi Cloud")
+        continue
+
     decrypted = None       
     if incoming:
         if len(mp.data) == 0:
