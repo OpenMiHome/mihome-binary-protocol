@@ -13,7 +13,7 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
     | Unknown1                                                      |
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | Unknown2                                                      |
+    | Device ID ("did")                                             |
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
     | Stamp                                                         |
     |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
@@ -36,8 +36,8 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          This value is always 0,
          except in the "Hello" packet, when it's 0xFFFFFFFF
          
-     Unknown 2: 32 bits
-         This value always seems to be 0x02af3988
+     Device ID: 32 bits
+         Unique number. Possibly derived from the MAC address.
          except in the "Hello" packet, when it's 0xFFFFFFFF
  
      Stamp: 32 bit unsigned int
@@ -51,7 +51,8 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          this field contains the 128-bit device token instead.
      
      optional variable-sized data:
-         encrypted with AES-128
+         encrypted with AES-128: see below.
+         length = packet_length - 0x20
           
 
 ## Initial handshake ("SmartConnect")
@@ -86,7 +87,7 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
         | 0x00000000                                                    |
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-        | 0x02af3988                                                    |
+        | 0x12345678                                                    |
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
         | Stamp                                                         |
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
