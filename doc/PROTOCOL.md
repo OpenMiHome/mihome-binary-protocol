@@ -32,7 +32,7 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
      Packet length: 16 bits unsigned int
          Length in bytes of the whole packet, including the header.
       
-     Unknown 1: 32 bits
+     Unknown1: 32 bits
          This value is always 0,
          except in the "Hello" packet, when it's 0xFFFFFFFF
          
@@ -98,6 +98,9 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
 	The 128-bit token is used to identify the device and, more importantly, to 
 	encrypt all further communication.
 
+*Update 2017-02-23:* Xiaomi updated the device firmwares and only 
+uninitialized devices reveal their token now. 
+
 ## Encryption
 The variable-sized data payload is encrypted with the Advanced Encryption 
 Standard (AES). A 128-bit key and Initialization Vector are both derived from 
@@ -126,12 +129,15 @@ One critical exception is the transmission of the user's WiFi credentials:
       }
     }
 
-The field 'id' is a UNIX timestamp. The meaning of 'uid' is yet undetermined.
+* `id` is a UNIX timestamp.
+* `uid` identifies the device owner. The device will phone home and report this to Xiaomi.
 
 
 
 ## Appendix
 ### Authors
+This document is part of the [OpenMiHome project](https://github.com/openmihome). Authors include:
+
  * Wolfgang Frisch ([GitHub](https://github.com/wfr))
  
 ### Links
