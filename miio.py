@@ -69,17 +69,17 @@ def AES_cbc_decrypt(token: bytes, ciphertext: bytes) -> bytes:
 def print_head(raw_packet: bytes):
     """Print the header fields of a MiHome packet."""
     head = raw_packet[:32]
-    magic, packet_len, unknown1, unknown2, stamp, md5 = \
+    magic, packet_len, unknown, did, stamp, md5 = \
         struct.unpack('!2sHIII16s', head)
     print("  magic:        %8s" % magic.hex())
     print("  packet_len:   %8x" % packet_len)
-    print("  unknown1:     %8x" % unknown1)
-    print("  unknown2:     %8x" % unknown2)
+    print("  unknown field:     %8x" % unknown1)
+    print("  device ID:     %8x" % did)
     print("  stamp:        %8x" % stamp)
     print("  md5 checksum: %s" % md5.hex())
 
 
-def encrypt(stamp: int, token: bytes, plaindata: bytes) -> bytes:
+def encrypt(stamp: int, did: int, token: bytes, plaindata: bytes) -> bytes:
     """Generate an encrypted packet from plain data.
 
     Args:
@@ -87,13 +87,13 @@ def encrypt(stamp: int, token: bytes, plaindata: bytes) -> bytes:
         token: 128 bit device token
         plaindata: plain data
     """
-    def init_msg_head(stamp: int, token: bytes, packet_len: int) -> bytes:
+    def init_msg_head(stamp: int, did: int, token: bytes, packet_len: int) -> bytes:
         head = struct.pack(
             '!BBHIII16s',
             0x21, 0x31,  # const magic value
             packet_len,
             0,  # unknown const
-            0x02af3988,  # unknown const
+            did,  # device id
             stamp,
             token  # overwritten by the MD5 checksum later
         )
@@ -101,7 +101,7 @@ def encrypt(stamp: int, token: bytes, plaindata: bytes) -> bytes:
 
     payload = AES_cbc_encrypt(token, plaindata)
     packet_len = len(payload) + 32
-    packet = bytearray(init_msg_head(stamp, token, packet_len) + payload)
+    packet = bytearray(init_msg_head(stamp, did, token, packet_len) + payload)
     checksum = md5(packet)
     for i in range(0, 16):
         packet[i+16] = checksum[i]
@@ -125,7 +125,7 @@ class MiioPacket():
         self.magic = (0x21, 0x31)
         self.length = None
         self.unknown1 = 0
-        self.unknown2 = 0x02af3988
+        self.did = 0
         self.stamp = 0
         self.data = None
         self.md5 = None
@@ -134,7 +134,7 @@ class MiioPacket():
         """Parse the payload of a UDP packet."""
         head = raw[:32]
         self.magic, self.length, self.unknown1, \
-        self.unknown2, self.stamp, self.md5 = \
+        self.did, self.stamp, self.md5 = \
             struct.unpack('!2sHIII16s', head)
         self.data = raw[32:]
 
