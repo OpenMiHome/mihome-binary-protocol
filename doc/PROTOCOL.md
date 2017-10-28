@@ -45,7 +45,7 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          
      MD5 checksum:
          calculated for the whole packet including the MD5 field itself,
-         which must be initialized with 0.
+         which must be initialized with device's token.
          
          In the special case of the response to the "Hello" packet,
          this field contains the 128-bit device token instead.
