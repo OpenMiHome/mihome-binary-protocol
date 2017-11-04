@@ -3,8 +3,9 @@ import socket
 import struct
 
 def main():
-	TARGET_IP = "192.168.13.1"
-	MY_IP = "192.168.13.3"
+	TARGET_IP = ""
+	BROADCAST_IP = "192.168.13.255"
+	#MY_IP = "192.168.13.3"
 	UDP_PORT = 54321
 	pkt_hello = bytes.fromhex("21 31 00 20 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff")
 	payload_toggle = bytes.fromhex("7b 22 69 64 22 3a 31 2c 22 6d 65 74 68 6f 64 22 3a 22 74 6f 67 67 6c 65 22 2c 22 70 61 72 61 6d 73 22 3a 5b 5d 7d")
@@ -12,10 +13,11 @@ def main():
 
 	sock = socket.socket(socket.AF_INET, # Internet
 		             socket.SOCK_DGRAM) # UDP
-	sock.bind((MY_IP, UDP_PORT))
+	sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+	#sock.bind((MY_IP, UDP_PORT))
 	print("open socket")
 
-	sock.sendto(pkt_hello, (TARGET_IP, UDP_PORT))
+	sock.sendto(pkt_hello, (BROADCAST_IP, UDP_PORT))
 	print("sending hello")
 
 
@@ -23,7 +25,13 @@ def main():
 		data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
 		break
 
-	print("received message:", data)
+	TARGET_IP = addr[0]
+
+	if(data == pkt_hello):
+		print("received hello back from:", TARGET_IP)
+		return	
+
+	print("received message from ip " + TARGET_IP + ":\n", data)
 	miio.print_head(data)
 	head = data[:32]
 	magic, packet_len, unknown1, did, stamp, token = \
