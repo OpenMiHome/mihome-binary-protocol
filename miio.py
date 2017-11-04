@@ -69,7 +69,7 @@ def AES_cbc_decrypt(token: bytes, ciphertext: bytes) -> bytes:
 def print_head(raw_packet: bytes):
     """Print the header fields of a MiHome packet."""
     head = raw_packet[:32]
-    magic, packet_len, unknown, did, stamp, md5 = \
+    magic, packet_len, unknown1, did, stamp, md5 = \
         struct.unpack('!2sHIII16s', head)
     print("  magic:        %8s" % magic.hex())
     print("  packet_len:   %8x" % packet_len)
