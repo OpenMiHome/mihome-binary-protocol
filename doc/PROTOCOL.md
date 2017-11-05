@@ -6,22 +6,26 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
 
 ## Packet format
 
-     0                   1                   2                   3   
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    | Magic number = 0x2131         | Packet Length (incl. header)  |
-    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | Unknown1                                                      |
-    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | Device ID ("did")                                             |
-    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | Stamp                                                         |
-    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | MD5 checksum                                                  |
-    | ... or Device Token in response to the "Hello" packet         |
-    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
-    | optional variable-sized data (encrypted)                      |
-    |...............................................................|
+         0               1               2               3   
+         0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7 0 1 2 3 4 5 6 7
+        +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+------
+     0  | Magic number = 0x2131          | Packet Length (incl. header) |    ↑
+        |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|    |
+     1  | Unknown1                                                      |    |
+        |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|    |
+     2  | Device ID ("did")                                             |    |   
+        |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|    |
+     3  | Time Stamp                                                    |  Header
+        |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|    |
+     4  | MD5 checksum.                                                 |    |
+     5  | OR                                                            |    |
+     6  | Device Token in response to the "Hello" packet.               |    |
+     7  | size = 16 bytes.                                              |    ↓
+        |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|------
+     8  | optional, variable-sized data                                 |    ↑
+     ⋮   ⋮ max size = 65503 bytes (0xffff - header size).                ⋮  Payload
+    n-1 | encrypted with AES-128 (see below).                           |    ↓
+     n  |...............................................................|------
     
                     Mi Home Binary Protocol header
            Note that one tick mark represents one bit position.
@@ -45,7 +49,7 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          
      MD5 checksum:
          calculated for the whole packet including the MD5 field itself,
-         which must be initialized with 0.
+         which must be initialized with device's token.
          
          In the special case of the response to the "Hello" packet,
          this field contains the 128-bit device token instead.

@@ -67,13 +67,18 @@ cap = pyshark.FileCapture(
     args.pcapfile, display_filter=("udp.port == 54321"))
 
 device_token = {}  # type: Dict[str, bytes]
+master_token = -1
+# if you want to use hardcodded token, you can use the master_token var, for example:
+# master_token = bytes.fromhex("0123456789abcdef0123456789abcdef")
 
 for packet in cap:
     if "data" not in packet:
         continue
-    if (not ipaddress.ip_address(packet.ip.src).is_private
-            or not ipaddress.ip_address(packet.ip.dst).is_private):
-        print("NOT IMPLEMENTED: packet to/from Xiaomi Cloud")
+    if (not ipaddress.ip_address(packet.ip.src).is_private):
+        print("packet from Xiaomi Cloud")
+        continue
+    elif(not ipaddress.ip_address(packet.ip.dst).is_private):
+        print("packet to Xiaomi Cloud")
         continue
 
     mac_src, mac_dst = get_macs(packet)
@@ -94,6 +99,7 @@ for packet in cap:
 
     decrypted = None
     if incoming:
+        print("incoming:")
         if len(mp.data) == 0:
             token = mp.md5
             device_token[mac_src] = token
@@ -101,12 +107,31 @@ for packet in cap:
                 mac_src, token.hex()))
         elif mac_src in device_token:
             decrypted = miio.decrypt(device_token[mac_src], data)
+        elif master_token != -1:
+            print("using master token")
+            try:
+                decrypted = miio.decrypt(master_token, data)
+            except Exception as e:
+                print(str(e))
+        else:
+            print("Error: can't decrypt. no device token or master token found")
+
     elif outgoing:
+        print("outgoing:")
         if mp.md5 == b"\xff" * 16:
             print("META: Hello")
         elif mac_dst in device_token:
             decrypted = miio.decrypt(device_token[mac_dst], data)
-    if decrypted:
+        elif master_token != -1:
+            print("using master token")
+            try:
+                decrypted = miio.decrypt(master_token, data)
+            except Exception as e:
+                print(str(e))
+        else:
+            print("Error: can't decrypt. no device token or master token found")
+
+    if decrypted is not None:
         print(decrypted.decode('UTF-8'))
 
 # vim:set expandtab tabstop=4 shiftwidth=4 softtabstop=4 nowrap:
