@@ -18,13 +18,13 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
      3  | Time Stamp                                                    |  Header
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|    |
      4  | MD5 checksum.                                                 |    |
-     5  | OR  							    	|    |
-     6  | Device Token in response to the "Hello" packet.	        |    |
-     7  | size = 16 bytes.						|    ↓
+     5  | OR                                                            |    |
+     6  | Device Token in response to the "Hello" packet.               |    |
+     7  | size = 16 bytes.                                              |    ↓
         |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|------
-     8  | optional, variable-sized data 	                        |    ↑
+     8  | optional, variable-sized data                                 |    ↑
      ⋮   ⋮ max size = 65503 bytes (0xffff - header size).                ⋮  Payload
-    n-1 | encrypted with AES-128 (see below).			        |    ↓
+    n-1 | encrypted with AES-128 (see below).                           |    ↓
      n  |...............................................................|------
     
                     Mi Home Binary Protocol header
