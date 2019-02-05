@@ -2,7 +2,7 @@
 
 The **Mi Home Binary Protocol** is used to configure & control smart home devices made by Xiaomi.
 
-It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
+It is an encrypted, binary protocol, based on UDP. The designated port is 54321. Device responds to the port used for sending request
 
 ## Packet format
 
@@ -30,7 +30,8 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          Always 0x2131
          
      Packet length: 16 bits unsigned int
-         Length in bytes of the whole packet, including the header.
+         Length in bytes of the whole packet, including the header and 
+	 variable-sized data.
       
      Unknown1: 32 bits
          This value is always 0,
@@ -41,18 +42,15 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
          except in the "Hello" packet, when it's 0xFFFFFFFF
  
      Stamp: 32 bit unsigned int
-         continously increasing counter
+         Unix style epoch time
          
      MD5 checksum:
          calculated for the whole packet including the MD5 field itself,
-         which must be initialized with 0.
-         
-         In the special case of the response to the "Hello" packet,
-         this field contains the 128-bit device token instead.
-     
+         which must be initialized with the token.
+              
      optional variable-sized data:
          encrypted with AES-128: see below.
-         length = packet_length - 0x20
+         
           
 
 ## Initial handshake ("SmartConnect")
@@ -101,13 +99,56 @@ It is an encrypted, binary protocol, based on UDP. The designated port is 54321.
 *Update 2017-02-23:* Xiaomi updated the device firmwares and only 
 uninitialized devices reveal their token now. 
 
+#Communicaton with the device
+
+1. Client → Device
+     0                   1                   2                   3   
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Magic number = 0x2131         | Packet Length (incl. header)  |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Unknown1                                                      |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Device ID ("did")                                             |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Stamp                                                         |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | MD5 checksum / Device Token                                   |
+    |                                                               |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | json based command data (encrypted)                           |
+    |...............................................................|
+
+2. Device → Client
+     0                   1                   2                   3   
+     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 
+    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+    | Magic number = 0x2131         | Packet Length (incl. header)  |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Unknown1                                                      |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Device ID ("did")                                             |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | Stamp                                                         |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | MD5 checksum                                                  |
+    |                                                               |
+    |-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-|
+    | json based response (encrypted)                               |
+    |...............................................................|
+
+Device will not respond if packet is malformed:
+- MD5 sum does not match ( e.g. incorrect token used to calculate it)
+- payload data are encypted with incorrect key or IV
+- timestamp is older
+
 ## Encryption
 The variable-sized data payload is encrypted with the Advanced Encryption 
 Standard (AES). A 128-bit key and Initialization Vector are both derived from 
 the Token as follows:
 
     Key = MD5(Token)
-    IV  = MD5(MD5(Key) + Token)
+    IV  = MD5(Key + Token)
     
 PKCS#7 padding is used prior to encryption.
 
