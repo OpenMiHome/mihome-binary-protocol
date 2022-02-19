@@ -107,7 +107,7 @@ Standard (AES). A 128-bit key and Initialization Vector are both derived from
 the Token as follows:
 
     Key = MD5(Token)
-    IV  = MD5(MD5(Key) + Token)
+    IV  = MD5(Key + Token)
     
 PKCS#7 padding is used prior to encryption.
 
